@@ -26,6 +26,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ banners, loading }) => 
   const [current, setCurrent] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [viewedBanners, setViewedBanners] = useState<Set<string>>(new Set());
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   const activeBanner = banners[current];
 
@@ -37,28 +38,45 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ banners, loading }) => 
     }, duration * 1000);
   }, [activeBanner?.duration, banners.length]);
 
-  // Track banner view when it becomes active
+  // Track banner view when it becomes visible on screen (including scroll up/down)
   useEffect(() => {
-    if (activeBanner && activeBanner.id) {
-      const bannerId = activeBanner.code || `content_news_hero_${activeBanner.id}`;
-      
-      // Track view only once per banner
-      if (!viewedBanners.has(bannerId)) {
-        setViewedBanners(prev => new Set(prev).add(bannerId));
-        
-        // Track to Google Analytics
-        trackBannerInteraction(bannerId, 'view', 'hero_banner');
-        
-        // Track to QL analytics server
-        trackBannerAnalytics(
-          bannerId, 
-          'view', 
-          'hero_banner', 
-          activeBanner.duration?.toString() || '5'
-        );
+    if (!bannerRef.current || !activeBanner) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && activeBanner.id) {
+            const bannerId = activeBanner.code || `content_news_hero_${activeBanner.id}`;
+            
+            // Track view every time banner becomes visible (including scroll up/down)
+            // This ensures analytics triggers when user scrolls down and then back up
+            setViewedBanners(prev => new Set(prev).add(bannerId));
+            
+            // Track to Google Analytics
+            trackBannerInteraction(bannerId, 'view', 'hero_banner');
+            
+            // Track to QL analytics server
+            trackBannerAnalytics(
+              bannerId, 
+              'view', 
+              'hero_banner', 
+              activeBanner.duration?.toString() || '5'
+            );
+          }
+        });
+      },
+      { 
+        threshold: 0.3, // 30% of banner must be visible (more sensitive)
+        rootMargin: '0px 0px -100px 0px' // Trigger when banner is 100px from bottom
       }
-    }
-  }, [current, activeBanner, viewedBanners]);
+    );
+
+    observer.observe(bannerRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [current, activeBanner]);
 
   useEffect(() => {
     if (banners.length > 1) {
@@ -93,6 +111,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ banners, loading }) => 
 
  return (
   <Box
+    ref={bannerRef}
     sx={{
       position: "relative",
       width: "100%",
