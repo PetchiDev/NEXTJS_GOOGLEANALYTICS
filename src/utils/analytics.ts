@@ -133,11 +133,51 @@ export const trackAccordionToggle = (section: string, isOpen: boolean) => {
 // Track banner interactions
 export const trackBannerInteraction = (bannerId: string, action: 'view' | 'click', bannerType: string) => {
   if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', 'banner_interaction', {
+    window.gtag('event', action === 'view' ? 'banner_impression' : 'banner_click', {
       banner_id: bannerId,
-      action,
       banner_type: bannerType,
+      content_type: 'banner',
+      vertical: 'content',
+      analytics_type: 'banner_tracking'
     });
+  }
+};
+
+// Track banner analytics to QL server
+export const trackBannerAnalytics = async (
+  bannerId: string, 
+  action: 'view' | 'click', 
+  bannerType: string,
+  duration?: string,
+  url?: string
+) => {
+  try {
+    // Only send the exact payload structure you specified
+    const analyticsData = {
+      banner: bannerId,
+      impressions: [],
+      url: url || window.location.pathname
+    };
+
+    // Send to QL analytics server with type=7 and vertical=12 as query params
+    const queryParams = new URLSearchParams({
+      type: '7',        // VIEW_BANNER_IMPRESSION
+      vertical: '12'    // CONTENT
+    });
+
+    const response = await fetch(`https://ql-shared-prod.qatarliving.com/analytics?${queryParams}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(analyticsData)
+    });
+
+    if (!response.ok) {
+      console.warn('Banner analytics failed:', response.status);
+    }
+  } catch (error) {
+    console.error('Error tracking banner analytics:', error);
   }
 };
 
