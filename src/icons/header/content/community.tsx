@@ -1,0 +1,36 @@
+import * as React from "react";
+
+interface SVGProps extends React.SVGProps<SVGSVGElement> {
+  color?: string;
+}
+
+const SVGComponent: React.FC<SVGProps> = (props) => {
+  const { color = "#646464", ...rest } = props;
+  return (
+    <svg
+      width={25}
+      height={24}
+      viewBox="0 0 25 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...rest}
+    >
+      <path
+        d="M14.5 9C14.5 9.53043 14.2893 10.0391 13.9142 10.4142C13.5391 10.7893 13.0304 11 12.5 11H6.5L2.5 15V4C2.5 3.46957 2.71071 2.96086 3.08579 2.58579C3.46086 2.21071 3.96957 2 4.5 2H12.5C13.0304 2 13.5391 2.21071 13.9142 2.58579C14.2893 2.96086 14.5 3.46957 14.5 4V9Z"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18.5 9H20.5C21.0304 9 21.5391 9.21071 21.9142 9.58579C22.2893 9.96086 22.5 10.4696 22.5 11V22L18.5 18H12.5C11.9696 18 11.4609 17.7893 11.0858 17.4142C10.7107 17.0391 10.5 16.5304 10.5 16V15"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
+
+export default SVGComponent;

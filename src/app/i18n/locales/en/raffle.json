@@ -1,0 +1,16 @@
+{
+  "full_name": "Full Name",
+  "email": "Email Address",
+  "phone_number": "Phone Number",
+  "terms_error": "You must accept the terms if you provide either name or email.",
+  "name_required_error": "Name is required.",
+  "email_required_error": "Email is required.",
+  "invalid_email_error": "Invalid email address.",
+  "phone_number_required_error": "Phone number is required.",
+  "phone_number_min_error": "Phone number must be at least 3 characters long.",
+  "phone_number_max_error": "Phone number must not exceed 15 characters.",
+  "invalid_phone_number_error": "Invalid phone number.",
+  "invalid_qatari_number_error": "Phone number should be Qatari.",
+  "raffle_heading": "Post and Pay on Qatar Living and Get a Chance to Win a 2025 Kaiyi X3 Pro! 🏆🚘",
+  "raffle_description": "For every 25 QAR spent in Qatar Living, you earn an entry to win. Complete the form to join."
+}

@@ -1,0 +1,23 @@
+{
+  "failed_network_message": "No internet available. Check your network connection",
+  "network_failed": "Network Offline",
+  "page_not_found": "Sorry, that page isn't here.",
+  "incorrect_address": "We may have moved the page you're looking for or you may have typed the address incorrectly. ",
+  "what_you_can_do": "What you can do:",
+  "visit_our": "Visit our",
+  "homepage": "homepage",
+  "correct_content": "to find the content you were searching for.",
+  "typed_wrong_address": "If you typed the address (URL), check the spelling.",
+  "popular_content": "You may also find our most popular content helpful:",
+  "shop_cars_for_sale": "Shop cars for sale",
+  "unexpected_error": "Sorry, unexpected error",
+  "something_went_wrong": "Something Went Wrong. Try again Later!!",
+  "error_404": "error 404",
+  "error_500": "error 500",
+  "cars_for_sale": "Cars for Sale",
+  "not_available": "This car is no longer available.",
+  "not_available_body": "The car is most likely sold or has been removed for some reason.",
+  "not_available_body2": "Visit the Cars Section to search thousands of cars.",
+  "description_required_error": "Please enter the offer description.",
+  "description_max_length_error": "The description should be a maximum of {{charLimit}} characters."
+}

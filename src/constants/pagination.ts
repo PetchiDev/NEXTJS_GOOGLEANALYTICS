@@ -1,0 +1,19 @@
+export const enum PAGINATION_PARAMS {
+  CUR_PAGE = "curpage",
+  PER_PAGE = "perpage",
+}
+
+export const enum PAGINATION_DEFAULTS {
+  DEFAULT_CUR_PAGE = 1,
+  DEFAULT_PER_PAGE = 10,
+  DEFAULT_MAP_PER_PAGE = 9,
+  MAX_LENGTH = 80,
+  DASHBOARD_DEFAULT_PER_PAGE = 100,
+  AGENT_AGENCY_DEFAULT_PER_PAGE = 15,
+}
+
+export const RESULTS_PER_PAGE = [12, 24, 48];
+
+export const DEFAULT_PER_PAGE = 12;
+
+export const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 30];

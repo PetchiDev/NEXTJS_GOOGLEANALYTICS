@@ -1,0 +1,17 @@
+{
+  "failed_network_message": "No internet available. Check your network connection",
+  "network_failed": "Network Offline",
+  "page_not_found": "Sorry, that page isn't here.",
+  "incorrect_address": "We may have moved the page you're looking for or you may have typed the address incorrectly. ",
+  "what_you_can_do": "What you can do:",
+  "visit_our": "Visit our",
+  "homepage": "homepage",
+  "correct_content": "to find the content you were searching for.",
+  "typed_wrong_address": "If you typed the address (URL), check the spelling.",
+  "popular_content": "You may also find our most popular content helpful:",
+  "shop_cars_for_sale": "Shop cars for sale",
+  "unexpected_error": "Sorry, unexpected error",
+  "something_went_wrong": "Something Went Wrong. Try again Later!!",
+  "error_404": "error 404",
+  "error_500": "error 500"
+}
