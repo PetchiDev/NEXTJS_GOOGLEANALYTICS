@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useCallback } from 'react';
 import { Box, Typography, TextField, Button } from '@mui/material';
-import { trackNewsletterSubscription } from '@/utils/analytics';
+import { trackNewsletterSubscription, trackNewsletterSubscriptionQL } from '@/utils/analytics';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
 
@@ -40,7 +40,7 @@ const NewsletterSubscription: React.FC = () => {
 
   const handleBlur = () => setError(validate(value));
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const msg = validate(value);
     if (msg) {
@@ -53,10 +53,32 @@ const NewsletterSubscription: React.FC = () => {
     setSubmitting(true);
     const email = value.trim();
 
-    // Track newsletter subscription
-    trackNewsletterSubscription(true, "news");
+    console.log('🚀 Subscribe button clicked - Starting analytics tracking...');
 
-    window.location.href = `https://qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    try {
+      // Track newsletter subscription to Google Analytics
+      console.log('📊 Tracking to Google Analytics...');
+      trackNewsletterSubscription(true, "news");
+      console.log('✅ Google Analytics tracking completed');
+      
+      // Track newsletter subscription to QL analytics server
+      console.log('🌐 Tracking to QL Analytics Server...');
+      await trackNewsletterSubscriptionQL(true, "news");
+      console.log('✅ QL Analytics Server tracking completed');
+      
+      // Small delay to ensure analytics are sent before redirect
+      console.log('⏳ Waiting 100ms for analytics to complete...');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('🔄 Redirecting to Mailchimp...');
+      // Redirect to Mailchimp
+      window.location.href = `https://qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    } catch (error) {
+      console.error('❌ Analytics tracking failed:', error);
+      // Still redirect even if analytics fails
+      console.log('🔄 Redirecting to Mailchimp (analytics failed)...');
+      window.location.href = `https://qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    }
   };
 
   const isButtonDisabled = submitting;

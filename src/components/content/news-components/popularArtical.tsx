@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -10,6 +10,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import Image from 'next/image';
+import { trackArticleImpression, trackArticleImpressionQL } from '@/utils/analytics';
 
 interface ContentItem {
   id: string;
@@ -26,6 +27,42 @@ interface MoreArticlesProps {
 const PopularArtical: React.FC<MoreArticlesProps> = ({ moreArticles, loading }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Track article impressions when they become visible
+  useEffect(() => {
+    if (!moreArticles.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && (entry.target as HTMLElement).dataset.articleId) {
+            const articleId = (entry.target as HTMLElement).dataset.articleId;
+            const article = moreArticles.find(a => a.id === articleId);
+            
+            if (article) {
+              // Track to Google Analytics
+              trackArticleImpression(article.id, article.title, "popular_articles");
+              
+              // Track to QL analytics server
+              trackArticleImpressionQL(article.id, article.title, "popular_articles");
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.3,
+        rootMargin: '0px 0px -100px 0px'
+      }
+    );
+
+    // Observe all article elements
+    const articleElements = document.querySelectorAll('[data-article-id]');
+    articleElements.forEach(el => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [moreArticles]);
 
   return (
     <Box sx={{ width: '100%', overflow: 'hidden' }}>
@@ -72,6 +109,7 @@ const PopularArtical: React.FC<MoreArticlesProps> = ({ moreArticles, loading }) 
               style={{ textDecoration: 'none', color: 'inherit' }}
             >
               <Box
+                data-article-id={article.id}
                 display="flex"
                 flexDirection={isMobile ? 'column' : 'row'}
                 alignItems={isMobile ? 'flex-start' : 'center'}

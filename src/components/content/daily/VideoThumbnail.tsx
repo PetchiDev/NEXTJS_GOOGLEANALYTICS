@@ -5,6 +5,7 @@ import { Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { VideoItem } from '@/types';
 import PlayIcon from "@/icons/common/play_icon";
+import { trackVideoPlay, trackVideoPlayQL } from '@/utils/analytics';
 
 interface Props {
   video: VideoItem;
@@ -12,13 +13,24 @@ interface Props {
 }
 
 const VideoThumbnail: React.FC<Props> = ({ video, onClick }) => {
+  const handleVideoClick = () => {
+    // Track video play to Google Analytics
+    trackVideoPlay(video.id, video.title, "news");
+    
+    // Track video play to QL analytics server
+    trackVideoPlayQL(video.id, video.title, "news");
+    
+    // Call the original onClick
+    onClick();
+  };
+
   return (
     <Box
       display="flex"
       alignItems="center"
       gap={2}
       sx={{ cursor: 'pointer', py: 1 }}
-      onClick={onClick}
+      onClick={handleVideoClick}
     >
       {/* Thumbnail Box */}
       <Box

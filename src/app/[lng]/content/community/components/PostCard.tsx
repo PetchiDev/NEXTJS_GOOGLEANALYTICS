@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   Box,
   Typography,
@@ -38,7 +38,12 @@ import {
   trackArticleClick, 
   trackLikeAction, 
   trackShareAction, 
-  trackReportAction 
+  trackReportAction,
+  trackArticleImpressionQL,
+  trackArticleClickQL,
+  trackLikeActionQL,
+  trackShareActionQL,
+  trackReportActionQL
 } from "@/utils/analytics";
 
 /* ----------------------------- Helpers ----------------------------- */
@@ -125,12 +130,42 @@ const PostCard: React.FC<PostCardProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [showShareIcons, setShowShareIcons] = useState(false);
+  const postRef = useRef<HTMLDivElement>(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const open = Boolean(anchorEl);
 
   const safeMarkdown = useMemo(() => cleanHtmlToMarkdown(description), [description]);
+
+  // Track article impression when it becomes visible
+  useEffect(() => {
+    if (!postRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && postId) {
+            // Track to Google Analytics
+            trackArticleImpression(postId, title, category);
+            
+            // Track to QL analytics server
+            trackArticleImpressionQL(postId, title, category);
+          }
+        });
+      },
+      {
+        threshold: 0.3,
+        rootMargin: '0px 0px -100px 0px'
+      }
+    );
+
+    observer.observe(postRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [postId, title, category]);
 
   useEffect(() => {
     const formatted = new Date(dateCreated).toLocaleString("en-GB", {
@@ -218,8 +253,11 @@ const PostCard: React.FC<PostCardProps> = ({
       e.stopPropagation();
       onLike?.(postId);
       
-      // Track like action
+      // Track like action to Google Analytics
       trackLikeAction(postId, title, true);
+      
+      // Track like action to QL analytics server
+      trackLikeActionQL(postId, title, true);
     },
     [onLike, postId, title]
   );
@@ -228,16 +266,22 @@ const PostCard: React.FC<PostCardProps> = ({
     if (typeof window !== "undefined") {
       window.open(href, "_blank", "noopener,noreferrer");
       
-      // Track share action
+      // Track share action to Google Analytics
       trackShareAction(platform, postId, title);
+      
+      // Track share action to QL analytics server
+      trackShareActionQL(platform, postId, title);
     }
   }, [postId, title]);
 
   const copyShare = useCallback(() => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(shareUrl).then(() => {
-        // Track copy link action
+        // Track copy link action to Google Analytics
         trackShareAction("copy_link", postId, title);
+        
+        // Track copy link action to QL analytics server
+        trackShareActionQL("copy_link", postId, title);
         
         alertRef?.current?.showAlert({
           title: "Success",
@@ -250,6 +294,7 @@ const PostCard: React.FC<PostCardProps> = ({
 
   return (
     <Box
+      ref={postRef}
       sx={{
         position: "relative",
         backgroundColor: "#ffffff",
@@ -336,7 +381,10 @@ const PostCard: React.FC<PostCardProps> = ({
         <Link
           href={`/content/community/${slug}`}
           style={{ textDecoration: "none", color: "inherit" }}
-          onClick={() => trackArticleClick(postId, title, category)}
+          onClick={() => {
+            trackArticleClick(postId, title, category);
+            trackArticleClickQL(postId, title, category);
+          }}
         >
           <Typography 
             fontWeight={600} 
@@ -359,7 +407,10 @@ const PostCard: React.FC<PostCardProps> = ({
         {imageUrl && imageUrl.trim() !== "" && (
           <Link 
             href={`/content/community/${slug}`}
-            onClick={() => trackArticleClick(postId, title, category)}
+            onClick={() => {
+              trackArticleClick(postId, title, category);
+              trackArticleClickQL(postId, title, category);
+            }}
           >
             <Box 
               sx={{ 

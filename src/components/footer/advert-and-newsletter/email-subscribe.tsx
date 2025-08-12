@@ -2,6 +2,7 @@
 import React, { useRef, useState } from "react";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { COLORS } from "../../../theme";
+import { trackNewsletterSubscription, trackNewsletterSubscriptionQL } from "@/utils/analytics";
 
 interface EmailSubscribeProps {
   subscribe: string;
@@ -11,7 +12,7 @@ const EmailSubscribe: React.FC<EmailSubscribeProps> = ({ subscribe }) => {
   const [error, setError] = useState<string>("");
   const emailRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const email = emailRef.current?.value.trim();
 
@@ -23,8 +24,25 @@ const EmailSubscribe: React.FC<EmailSubscribeProps> = ({ subscribe }) => {
       setError("Please enter valid email address");
       return;
     }
+    
     setError("");
-    window.location.href = `//qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&amp;id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    
+    try {
+      // Track newsletter subscription to Google Analytics
+      trackNewsletterSubscription(true, "footer");
+      
+      // Track newsletter subscription to QL analytics server
+      await trackNewsletterSubscriptionQL(true, "footer");
+      
+      // Small delay to ensure analytics are sent before redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      window.location.href = `//qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&amp;id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    } catch (error) {
+      console.error('Analytics tracking failed:', error);
+      // Still redirect even if analytics fails
+      window.location.href = `//qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&amp;id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    }
   };
 
   return (

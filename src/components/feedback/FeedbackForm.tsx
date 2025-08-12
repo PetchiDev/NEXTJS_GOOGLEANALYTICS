@@ -11,6 +11,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import Image from 'next/image';
 import { SelectChangeEvent } from '@mui/material/Select';
 import feedbackIcon from '@/icons/feedback/feedback.webp';
+import { trackNewsletterSubscription, trackNewsletterSubscriptionQL } from '@/utils/analytics';
 
 interface FeedbackFormModel {
   name: string;
@@ -84,8 +85,17 @@ export default function FeedbackForm() {
 
     try {
       await new Promise((res) => setTimeout(res, 1500));
+      
+      // Track successful newsletter subscription
+      trackNewsletterSubscription(true, "feedback_form");
+      trackNewsletterSubscriptionQL(true, "feedback_form");
+      
       setSubmissionResult(true);
     } catch {
+      // Track failed newsletter subscription
+      trackNewsletterSubscription(false, "feedback_form");
+      trackNewsletterSubscriptionQL(false, "feedback_form");
+      
       setSubmissionResult(false);
     } finally {
       setIsSubmitting(false);

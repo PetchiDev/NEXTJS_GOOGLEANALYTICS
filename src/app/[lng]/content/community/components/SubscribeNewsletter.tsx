@@ -7,13 +7,13 @@ import {
   Typography,
 } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
-import { trackNewsletterSubscription } from "@/utils/analytics";
+import { trackNewsletterSubscription, trackNewsletterSubscriptionQL } from "@/utils/analytics";
 
 const SubscribeNewsletter = () => {
   const emailRef = useRef<HTMLInputElement>(null);
   const [emailError, setEmailError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const email = emailRef.current?.value.trim() || "";
     const emailRegex = /\S+@\S+\.\S+/;
@@ -29,12 +29,25 @@ const SubscribeNewsletter = () => {
 
     setEmailError("");
     
-    // Track newsletter subscription attempt
-    trackNewsletterSubscription(true, "community");
-    
-    // Mailchimp redirect
-    window.location.href =
-      `//qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    try {
+      // Track newsletter subscription to Google Analytics
+      trackNewsletterSubscription(true, "community");
+      
+      // Track newsletter subscription to QL analytics server
+      await trackNewsletterSubscriptionQL(true, "community");
+      
+      // Small delay to ensure analytics are sent before redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Mailchimp redirect
+      window.location.href =
+        `//qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    } catch (error) {
+      console.error('Analytics tracking failed:', error);
+      // Still redirect even if analytics fails
+      window.location.href =
+        `//qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    }
   };
 
   return (

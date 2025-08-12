@@ -7,12 +7,13 @@ import {
   TextField,
   Button,
 } from '@mui/material';
+import { trackNewsletterSubscription, trackNewsletterSubscriptionQL } from '@/utils/analytics';
 
 const NewsletterSubscription = () => {
   const emailRef = useRef<HTMLInputElement>(null);
   const [emailError, setEmailError] = useState('');
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const email = emailRef.current?.value.trim() || '';
 
@@ -27,9 +28,26 @@ const NewsletterSubscription = () => {
     }
 
     setEmailError('');
-    // Redirect to Mailchimp subscribe endpoint
-    window.location.href =
-      `//qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    
+    try {
+      // Track newsletter subscription to Google Analytics
+      trackNewsletterSubscription(true, "daily");
+      
+      // Track newsletter subscription to QL analytics server
+      await trackNewsletterSubscriptionQL(true, "daily");
+      
+      // Small delay to ensure analytics are sent before redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Redirect to Mailchimp subscribe endpoint
+      window.location.href =
+        `//qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    } catch (error) {
+      console.error('Analytics tracking failed:', error);
+      // Still redirect even if analytics fails
+      window.location.href =
+        `//qatarliving.us9.list-manage.com/subscribe/post?u=3ab0436d22c64716e67a03f64&id=94198fac96&EMAIL=${encodeURIComponent(email)}`;
+    }
   };
 
   return (

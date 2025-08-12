@@ -4,7 +4,7 @@ import React, { useEffect, useState, useTransition } from "react";
 import { Box, Tab, Tabs, Paper, Typography } from "@mui/material";
 import { getAllNewsCategoris } from "@/utils/content/content";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { trackCategoryFilter } from "@/utils/analytics";
+import { trackCategoryFilter, trackCategoryFilterQL } from "@/utils/analytics";
 
 interface SubCategory {
   id: number;
@@ -111,8 +111,11 @@ const CategoryTabsWithSubTabs: React.FC<Props> = ({
       return;
     }
 
-    // Track category filter
+    // Track category filter to Google Analytics
     trackCategoryFilter(selectedCat.categoryName, "news");
+    
+    // Track category filter to QL analytics server
+    trackCategoryFilterQL(selectedCat.categoryName, "news");
 
     onCategoryChange(selectedCat.id);
 
@@ -127,9 +130,14 @@ const CategoryTabsWithSubTabs: React.FC<Props> = ({
     const cat = categories[selectedCategoryIndex];
     const sub = cat?.subCategories?.[newIndex] ?? null;
 
-    // Track subcategory filter
+    // Track subcategory filter to Google Analytics
     if (sub) {
       trackCategoryFilter(`${cat?.categoryName} > ${sub.subCategoryName}`, "news");
+    }
+    
+    // Track subcategory filter to QL analytics server
+    if (sub) {
+      trackCategoryFilterQL(`${cat?.categoryName} > ${sub.subCategoryName}`, "news");
     }
 
     onSubCategoryChange(sub ? sub.id : null);

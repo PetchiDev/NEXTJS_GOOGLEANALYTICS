@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Box, Typography, Skeleton } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,8 @@ import MoreArticles from './MoreArticles';
 import EmptyState from '@/components/empty-box';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import VerifiedIcon from '@mui/icons-material/Verified';
-import { trackArticleClick } from '@/utils/analytics';
+import { trackArticleClick, trackArticleImpression, trackArticleImpressionQL } from '@/utils/analytics';
+import ArticleInteractionBar from '@/components/content/news-components/ArticleInteractionBar';
 
 interface ContentItem {
   id: string;
@@ -37,10 +38,40 @@ const NewsHighlights: React.FC<NewsHighlightsProps> = ({ newsData, loading }) =>
   const router = useRouter();
   const topStory = newsData?.top_story?.items?.[0];
   const moreArticles = newsData?.more_articles?.items ?? [];
+  const topStoryRef = useRef<HTMLDivElement>(null);
 
   const isQatarLiving =
     topStory &&
     (topStory.writer_tag === 'Qatar Living' || topStory.user_name === 'Qatar Living');
+
+  // Track article impression when it becomes visible
+  useEffect(() => {
+    if (!topStory || !topStoryRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && topStory.id) {
+            // Track to Google Analytics
+            trackArticleImpression(topStory.id, topStory.title, "featured");
+            
+            // Track to QL analytics server
+            trackArticleImpressionQL(topStory.id, topStory.title, "featured");
+          }
+        });
+      },
+      {
+        threshold: 0.3,
+        rootMargin: '0px 0px -100px 0px'
+      }
+    );
+
+    observer.observe(topStoryRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [topStory]);
 
   return (
     <Box
@@ -61,6 +92,7 @@ const NewsHighlights: React.FC<NewsHighlightsProps> = ({ newsData, loading }) =>
           </Box>
         ) : topStory ? (
           <Box
+            ref={topStoryRef}
             onClick={() => {
               trackArticleClick(topStory.id, topStory.title, "featured");
               router.push(`/content/news/${topStory.slug ?? topStory.id}`);
@@ -137,6 +169,14 @@ const NewsHighlights: React.FC<NewsHighlightsProps> = ({ newsData, loading }) =>
                   </Typography>
                 </Box>
               </Box>
+
+              {/* Article Interaction Bar */}
+              <ArticleInteractionBar
+                articleId={topStory.id}
+                articleTitle={topStory.title}
+                category="featured"
+                url={`/content/news/${topStory.slug ?? topStory.id}`}
+              />
             </Box>
           </Box>
         ) : (

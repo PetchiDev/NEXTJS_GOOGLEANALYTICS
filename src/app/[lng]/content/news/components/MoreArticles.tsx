@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -10,7 +10,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import Image from 'next/image';
-import { trackArticleClick, trackMorePostsInteraction } from '@/utils/analytics';
+import { trackArticleClick, trackMorePostsInteraction, trackArticleImpression, trackArticleImpressionQL, trackMorePostsInteractionQL } from '@/utils/analytics';
 
 interface ContentItem {
   id: string;
@@ -27,6 +27,42 @@ interface MoreArticlesProps {
 const MoreArticles: React.FC<MoreArticlesProps> = ({ moreArticles, loading }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Track article impressions when they become visible
+  useEffect(() => {
+    if (!moreArticles.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && (entry.target as HTMLElement).dataset.articleId) {
+            const articleId = (entry.target as HTMLElement).dataset.articleId;
+            const article = moreArticles.find(a => a.id === articleId);
+            
+            if (article) {
+              // Track to Google Analytics
+              trackArticleImpression(article.id, article.title, "more_articles");
+              
+              // Track to QL analytics server
+              trackArticleImpressionQL(article.id, article.title, "more_articles");
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.3,
+        rootMargin: '0px 0px -100px 0px'
+      }
+    );
+
+    // Observe all article elements
+    const articleElements = document.querySelectorAll('[data-article-id]');
+    articleElements.forEach(el => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [moreArticles]);
 
   return (
     <Box
@@ -78,9 +114,11 @@ const MoreArticles: React.FC<MoreArticlesProps> = ({ moreArticles, loading }) =>
               onClick={() => {
                 trackArticleClick(article.id, article.title, "more_articles");
                 trackMorePostsInteraction("click", "news");
+                trackMorePostsInteractionQL("click", "news");
               }}
             >
               <Box
+                data-article-id={article.id}
                 display="flex"
                 flexDirection="row"
                 alignItems="flex-start"

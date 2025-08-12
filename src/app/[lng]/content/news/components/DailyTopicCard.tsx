@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { trackArticleImpression, trackArticleImpressionQL } from '@/utils/analytics';
 
 export interface DailyTopicItem {
   id: string;
@@ -25,7 +26,37 @@ interface Props {
 const DailyTopicCard: React.FC<Props> = ({ item }) => {
   const isVideo = item.node_type === 'video';
   const videoRef = useRef<HTMLIFrameElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Track article impression when it becomes visible
+  useEffect(() => {
+    if (!cardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && item.id) {
+            // Track to Google Analytics
+            trackArticleImpression(item.id, item.title, item.category || item.node_type);
+            
+            // Track to QL analytics server
+            trackArticleImpressionQL(item.id, item.title, item.category || item.node_type);
+          }
+        });
+      },
+      {
+        threshold: 0.3,
+        rootMargin: '0px 0px -100px 0px'
+      }
+    );
+
+    observer.observe(cardRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [item]);
 
   const getYouTubeEmbedUrl = (url: string, autoplay = true) => {
     const videoId = url.split('v=')[1]?.split('&')[0];
@@ -44,6 +75,7 @@ const DailyTopicCard: React.FC<Props> = ({ item }) => {
 
   return (
     <Box
+      ref={cardRef}
       display="flex"
       flexWrap={'wrap'}
       flexDirection={'column'}
